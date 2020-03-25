@@ -1,0 +1,184 @@
+apiVersion: apps/v1beta1
+kind: Deployment
+metadata:
+  name: gerrit
+  namespace: kube-ops
+  labels:
+    name: gerrit
+spec:
+  template:
+    metadata:
+      name: gerrit
+      labels:
+        name: gerrit
+    spec:
+      hostAliases:
+      - ip: 192.168.21.184
+        hostnames:
+        - gerrit.bochtec.com
+      containers:
+      - name: gerrit
+        image: openfrontier/gerrit:3.1.3
+        securityContext:
+          privileged: true
+        ports:
+        - name: http
+          containerPort: 8080
+        - name: ssh
+          containerPort: 29418
+        volumeMounts:
+        - name: gerrit
+          mountPath: /var/gerrit/review_site
+        env:
+        - name: AUTH_TYPE
+          value: "HTTP"
+        - name: WEBURL
+          value: "http://gerrit.bochtec.com"
+        - name: SMTP_SERVER
+          value: "smtp.bochtec.com"
+        - name: SMTP_SERVER_PORT 
+          value: "465"
+        - name: SMTP_ENCRYPTION
+          value: "SSL"
+        - name: SMTP_USER
+          value: "baosong@bochtec.com"
+        - name: SMTP_PASS
+          value: "XXXXXXXXXXXXXXXXX"
+        - name: SMTP_FROM
+          value: "Gerrit<baosong@bochtec.com>"
+        - name: DATABASE_TYPE
+          value: "postgresql"
+        - name: DATABASE_HOSTNAME
+          value: "postgres-gerrit"
+        - name: DATABASE_PORT
+          value: "5432"
+        - name: DATABASE_DATABASE
+          value: "reviewdb"
+        - name: DATABASE_USERNAME
+          value: "gerrit"
+        - name: DATABASE_PASSWORD
+          value: "gerrit123"
+        - name: GERRIT_INIT_ARGS
+          value: "--install-all-plugins"
+        volumeMounts:
+        - mountPath: /var/gerrit/review_site
+          name: gerrit
+      initContainers:
+      - name: init
+        image: openfrontier/gerrit:3.1.3
+        securityContext:
+          privileged: true
+        command:
+        - java
+        - -jar
+        - /var/gerrit/gerrit.war
+        - init
+        - -b
+        - --no-auto-start
+        - -d
+        - /var/gerrit/review_site/
+        env:
+        - name: AUTH_TYPE
+          value: "HTTP"
+        - name: WEBURL
+          value: "http://gerrit.bochtec.com"
+        - name: SMTP_SERVER
+          value: "smtp.bochtec.com"
+        - name: SMTP_SERVER_PORT
+          value: "465"
+        - name: SMTP_ENCRYPTION
+          value: "SSL"
+        - name: SMTP_USER
+          value: "baosong@bochtec.com"
+        - name: SMTP_PASS
+          value: "Nasong819"
+        - name: SMTP_FROM
+          value: "Gerrit<baosong@bochtec.com>"
+        - name: DATABASE_TYPE
+          value: "postgresql"
+        - name: DATABASE_HOSTNAME
+          value: "postgres-gerrit"
+        - name: DATABASE_PORT
+          value: "5432"
+        - name: DATABASE_DATABASE
+          value: "reviewdb"
+        - name: DATABASE_USERNAME
+          value: "gerrit"
+        - name: DATABASE_PASSWORD
+          value: "gerrit123"
+        - name: GERRIT_INIT_ARGS
+          value: "--install-all-plugins"
+        volumeMounts:
+        - mountPath: /var/gerrit/review_site
+          name: gerrit
+      - name: reindex
+        image: openfrontier/gerrit:3.1.3
+        securityContext:
+          privileged: true
+        command:
+        - java
+        - -jar
+        - /var/gerrit/gerrit.war
+        - reindex
+        - --show-stack-trace
+        - -d
+        - /var/gerrit/review_site/
+        env:
+        - name: AUTH_TYPE
+          value: "HTTP"
+        - name: WEBURL
+          value: "http://gerrit.bochtec.com"
+        - name: SMTP_SERVER
+          value: "smtp.bochtec.com"
+        - name: SMTP_SERVER_PORT
+          value: "465"
+        - name: SMTP_ENCRYPTION
+          value: "SSL"
+        - name: SMTP_USER
+          value: "baosong@bochtec.com"
+        - name: SMTP_PASS
+          value: "Nasong819"
+        - name: SMTP_FROM
+          value: "Gerrit<baosong@bochtec.com>"
+        - name: DATABASE_TYPE
+          value: "postgresql"
+        - name: DATABASE_HOSTNAME
+          value: "postgres-gerrit"
+        - name: DATABASE_PORT
+          value: "5432"
+        - name: DATABASE_DATABASE
+          value: "reviewdb"
+        - name: DATABASE_USERNAME
+          value: "gerrit"
+        - name: DATABASE_PASSWORD
+          value: "gerrit123"
+        - name: GERRIT_INIT_ARGS
+          value: "--install-all-plugins"
+        volumeMounts:
+        - mountPath: /var/gerrit/review_site
+          name: gerrit
+      volumes:
+      - name: gerrit
+        persistentVolumeClaim:
+          claimName: gerrit-pvc
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: gerrit
+  namespace: kube-ops
+  labels:
+    name: gerrit
+spec:
+  ports:
+    - name: http
+      port: 80
+      targetPort: http
+    - name: ssh
+      port: 29418
+      targetPort: ssh
+      nodePort: 29418
+  type: NodePort
+  selector:
+    name: gerrit

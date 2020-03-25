@@ -1,0 +1,58 @@
+apiVersion: apps/v1beta1
+kind: Deployment
+metadata:
+  name: postgres-sonar
+  namespace: kube-ops
+  labels:
+    name: postgres-sonar
+spec:
+  template:
+    metadata:
+      name: postgres-sonar
+      labels:
+        name: postgres-sonar
+    spec:
+      containers:
+      - name: postgres-sonar
+        image: postgres:11.7
+        imagePullPolicy: "IfNotPresent"
+        ports:
+        - name: postgres-sonar
+          containerPort: 5432
+        env:
+        - name: POSTGRES_DB
+          value: "sonarDB"
+        - name: POSTGRES_USER
+          value: "sonar"
+        - name: POSTGRES_PASSWORD
+          value: "sonar123"
+        resources:
+          limits:
+            cpu: 1000m
+            memory: 2048Mi
+          requests:
+            cpu: 500m
+            memory: 1024Mi
+        volumeMounts:
+          - mountPath: /var/lib/postgresql/data
+            name: postgredb-sonar
+      volumes:
+        - name: postgredb-sonar
+          persistentVolumeClaim:
+            claimName: postgres-sonar-pvc
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-sonar
+  namespace: kube-ops
+  labels:
+    name: postgres-sonar
+spec:
+  ports:
+    - name: postgres-sonar
+      port: 5432
+      targetPort: postgres-sonar
+  selector:
+    name: postgres-sonar

@@ -1,0 +1,81 @@
+apiVersion: apps/v1beta1
+kind: Deployment
+metadata:
+  name: gerrit-nginx
+  namespace: kube-ops
+  labels:
+    name: gerrit-nginx
+spec:
+  template:
+    metadata:
+      labels:
+        name: gerrit-nginx
+    spec:
+      containers:
+      - name: gerrit-nginx
+        image: nginx:1.17.9-alpine
+        ports:
+        - name: http
+          containerPort: 80
+        - name: ssh
+          containerPort: 29418
+        volumeMounts:
+        - name: conf
+          mountPath: /etc/nginx/conf.d/default.conf
+          subPath: default.conf
+        - name: password
+          mountPath: /etc/nginx/password
+          subPath: password
+      volumes:
+        - name: conf
+          configMap:
+            name: gerrit-config
+            items:
+              - key: default.conf
+                path: default.conf
+                mode: 0644
+        - name: password
+          configMap:
+            name: gerrit-config
+            items:
+              - key: password
+                path: password
+                mode: 0644
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: gerrit-nginx
+  namespace: kube-ops
+  labels:
+    name: gerrit-nginx
+spec:
+  ports:
+    - name: http
+      port: 80
+      protocol: TCP
+      targetPort: 80
+    - name: ssh
+      port: 29418
+      targetPort: ssh
+      nodePort: 29418
+  selector:
+    name: gerrit-nginx
+  type: NodePort
+
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: gerrit-nginx-ingress
+  namespace: kube-ops
+spec:
+  rules:
+  - host: gerrit.bochtec.com
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: gerrit-nginx
+          servicePort: 80

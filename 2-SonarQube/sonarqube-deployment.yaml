@@ -1,0 +1,113 @@
+apiVersion: apps/v1beta1
+kind: Deployment
+metadata:
+  name: sonarqube
+  namespace: kube-ops
+  labels:
+    name: sonarqube
+spec:
+  template:
+    metadata:
+      labels:
+        name: sonarqube
+    spec:
+      initContainers:
+      - name: init
+        image: busybox:latest
+        imagePullPolicy: IfNotPresent
+        command:
+        - /bin/sh
+        - -c
+        - |
+          sysctl -w vm.max_map_count=262144
+          if [ ! -d "/opt/sonarqube/data" ];then
+            mkdir /opt/sonarqube/data
+            chown 999 /opt/sonarqube/data
+          fi
+          if [ ! -d "/opt/sonarqube/extensions/plugins" ];then
+            mkdir -p /opt/sonarqube/extensions/plugins
+            chown 999 -R /opt/sonarqube/extensions
+          fi
+          chown 999 /opt/sonarqube
+        securityContext:
+          privileged: true
+        volumeMounts:
+        - mountPath: /opt/sonarqube
+          name: sonarqube
+      containers:
+      - name: sonarqube
+        image: sonarqube:7.9-community
+        ports:
+        - containerPort: 9000
+        env:
+        - name: SONARQUBE_JDBC_USERNAME
+          value: "sonar"
+        - name: SONARQUBE_JDBC_PASSWORD
+          value: "sonar123"
+        - name: SONARQUBE_JDBC_URL
+          value: "jdbc:postgresql://postgres-sonar:5432/sonarDB"
+        livenessProbe:
+          httpGet:
+            path: /sessions/new
+            port: 9000
+          initialDelaySeconds: 60
+          periodSeconds: 30
+        readinessProbe:
+          httpGet:
+            path: /sessions/new
+            port: 9000
+          initialDelaySeconds: 60
+          periodSeconds: 30
+          failureThreshold: 6
+        resources:
+          limits:
+            cpu: 2000m
+            memory: 2048Mi
+          requests:
+            cpu: 1000m
+            memory: 1024Mi
+        volumeMounts:
+        - mountPath: /opt/sonarqube/data
+          name: sonarqube
+          subPath: data
+        - mountPath: /opt/sonarqube/extensions
+          name: sonarqube
+          subPath: extensions
+      volumes:
+      - name: sonarqube
+        persistentVolumeClaim:
+          claimName: sonarqube-pvc
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: sonarqube
+  namespace: kube-ops
+  labels:
+    name: sonarqube
+spec:
+  ports:
+    - name: http
+      port: 9000
+      targetPort: 9000
+      protocol: TCP
+  selector:
+    name: sonarqube
+  type: ClusterIP
+
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: sonarqube-ingress
+  namespace: kube-ops
+spec:
+  rules:
+  - host: sonarqube.bochtec.com
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: sonarqube
+          servicePort: 9000

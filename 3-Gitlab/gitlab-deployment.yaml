@@ -1,0 +1,142 @@
+apiVersion: apps/v1beta1
+kind: Deployment
+metadata:
+  name: gitlab
+  namespace: kube-ops
+  labels:
+    name: gitlab
+spec:
+  template:
+    metadata:
+      name: gitlab
+      labels:
+        name: gitlab
+    spec:
+      initContainers:
+      - name: init
+        image: busybox:latest
+        imagePullPolicy: IfNotPresent
+        command:
+        - /bin/sh
+        - -c
+        - |
+          sysctl -w fs.file-max=655350
+          if [ ! -d "/opt/gitlab/gitlab" ];then
+            mkdir /opt/gitlab/gitlab
+          fi
+          if [ ! -d "/opt/gitlab/etc" ];then
+            mkdir /opt/gitlab/etc
+          fi
+        securityContext:
+          privileged: true
+        volumeMounts:
+        - mountPath: /opt/gitlab
+          name: gitlab
+      containers:
+      - name: gitlab
+        image: gitlab/gitlab-ce:12.9.0-ce.0
+        #image: gitlab/gitlab-ce:12.1.17-ce.0
+        imagePullPolicy: IfNotPresent
+        securityContext:
+          privileged: true
+        env:
+        - name: TZ
+          value: Asia/Shanghai
+        - name: GITLAB_TIMEZONE
+          value: Beijing
+        - name: GITLAB_SECRETS_DB_KEY_BASE
+          value: long-and-random-alpha-numeric-string
+        - name: GITLAB_SECRETS_SECRET_KEY_BASE
+          value: long-and-random-alpha-numeric-string
+        - name: GITLAB_SECRETS_OTP_KEY_BASE
+          value: long-and-random-alpha-numeric-string
+        - name: GITLAB_ROOT_PASSWORD
+          value: passw0rd
+        - name: GITLAB_HOST
+          value: gitlab.bochtec.com
+        - name: GITLAB_PORT
+          value: "80"
+        - name: GITLAB_SSH_PORT
+          value: "22"
+        - name: GITLAB_NOTIFY_ON_BROKEN_BUILDS
+          value: "true"
+        - name: GITLAB_NOTIFY_PUSHER
+          value: "false"
+        - name: GITLAB_BACKUP_SCHEDULE
+          value: daily
+        - name: GITLAB_BACKUP_TIME
+          value: 01:00
+        - name: DB_TYPE
+          value: postgres
+        - name: DB_HOST
+          value: localhost
+        - name: DB_PORT
+          value: "5432"
+        - name: DB_USER
+          value: gitlab
+        - name: DB_PASS
+          value: passw0rd
+        - name: DB_NAME
+          value: gitlab_production
+        ports:
+        - name: http
+          containerPort: 80
+        - name: ssh
+          containerPort: 22
+        volumeMounts:
+        - mountPath: /var/opt/gitlab
+          name: gitlab
+          subPath: gitlab
+        - mountPath: /etc/gitlab
+          name: gitlab
+          subPath: etc
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 80
+          initialDelaySeconds: 180
+          timeoutSeconds: 5
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 80
+          initialDelaySeconds: 5
+          timeoutSeconds: 1
+      volumes:
+      - name: gitlab
+        persistentVolumeClaim:
+          claimName: gitlab-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: gitlab
+  namespace: kube-ops
+  labels:
+    name: gitlab
+spec:
+  ports:
+    - name: http
+      port: 80
+      targetPort: http
+    - name: ssh
+      port: 22
+      targetPort: ssh
+  selector:
+    name: gitlab
+
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: gitlab-ingress
+  namespace: kube-ops
+spec:
+  rules:
+  - host: gitlab.bochtec.com
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: gitlab
+          servicePort: 80

@@ -1,0 +1,33 @@
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  name: gitlab-pv
+  namespace: kube-ops
+  labels:
+    name: gitlab-hostpath
+spec:
+  accessModes:
+    - ReadWriteOnce
+  capacity:
+    storage: 100Gi
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: gitlab
+  hostPath:
+    path: /share/kube-ops/gitlab
+
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: gitlab-pvc
+  namespace: kube-ops
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 100Gi
+  storageClassName: gitlab
+  selector:
+    matchLabels:
+      name: gitlab-hostpath

@@ -1,0 +1,33 @@
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  name: gerrit-pv
+  namespace: kube-ops
+  labels:
+    name: gerrit-hostpath
+spec:
+  accessModes:
+    - ReadWriteOnce
+  capacity:
+    storage: 100Gi
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: gerrit
+  hostPath:
+    path: /share/kube-ops/gerrit
+
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: gerrit-pvc
+  namespace: kube-ops
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 100Gi
+  storageClassName: gerrit
+  selector:
+    matchLabels:
+      name: gerrit-hostpath
