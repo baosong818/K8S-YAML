@@ -1,0 +1,51 @@
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: mysql-gerrit-pvc
+  namespace: kube-ops
+  labels:
+    app: mysql-gerrit
+  annotations:
+    volume.beta.kubernetes.io/storage-provisioner: bochtec.com/nfs
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+  storageClassName: nfsc
+
+#---
+#kind: PersistentVolume
+#apiVersion: v1
+#metadata:
+#  name: mysql-gerrit-pv
+#  namespace: kube-ops
+#  labels:
+#    name: mysql-gerrit-hostpath
+#spec:
+#  accessModes:
+#    - ReadWriteOnce
+#  capacity:
+#    storage: 10Gi
+#  persistentVolumeReclaimPolicy: Retain
+#  storageClassName: mysql-gerrit
+#  hostPath:
+#    path: /share/kube-ops/mysql-gerrit
+#
+#---
+#kind: PersistentVolumeClaim
+#apiVersion: v1
+#metadata:
+#  name: mysql-gerrit-pvc
+#  namespace: kube-ops
+#spec:
+#  accessModes:
+#    - ReadWriteOnce
+#  resources:
+#    requests:
+#      storage: 10Gi
+#  storageClassName: mysql-gerrit
+#  selector:
+#    matchLabels:
+#      name: mysql-gerrit-hostpath

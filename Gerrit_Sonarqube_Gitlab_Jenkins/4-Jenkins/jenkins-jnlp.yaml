@@ -1,0 +1,262 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jenkins-jnlp-1
+  namespace: kube-ops
+  labels:
+    app: jenkins-jnlp-1
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: jenkins-jnlp-1
+  template:
+    metadata:
+      name: jenkins-jnlp-1
+      labels:
+        app: jenkins-jnlp-1
+    spec:
+      terminationGracePeriodSeconds: 10
+      serviceAccount: jenkins
+      containers:
+      - name: jenkins-jnlp
+        image: '192.168.20.19:4000/bochtec-jenkins-jnlp:latest'
+        imagePullPolicy: IfNotPresent
+        env:
+          - name: JENKINS_SECRET
+            value: '6eb5b6375b4e0b0ff466ed6199ce2e390fc95abb87ac71ccdd36396404746fa6'
+          - name: JENKINS_TUNNEL
+            value: '192.168.19.29:31001'
+          - name: "JENKINS_AGENT_NAME"
+            value: "jenkins-jnlp-1"
+          - name: "JENKINS_NAME"
+            value: "jenkins-jnlp-1"
+          - name: JENKINS_URL
+            value: 'http://192.168.19.29:31000/'
+        volumeMounts:
+        - name: workspace-volume
+          subPath: jenkins
+          mountPath: /var/jenkins
+        - name: jenkins-token-q2lnw
+          readOnly: true
+          mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+        - name: docker
+          readOnly: true
+          mountPath: /usr/bin/docker
+        - name: docker-sock
+          readOnly: true
+          mountPath: /var/run/docker.sock
+      securityContext:
+        fsGroup: 1000
+      volumes:
+      - name: workspace-volume
+        persistentVolumeClaim:
+          claimName: jenkins-pvc
+      - name: jenkins-token-q2lnw
+        secret:
+          secretName: jenkins-token-q2lnw
+          defaultMode: 420
+      - name: docker
+        hostPath:
+          path: /usr/bin/docker
+      - name: docker-sock
+        hostPath:
+          path: /var/run/docker.sock
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jenkins-jnlp-2
+  namespace: kube-ops
+  labels:
+    app: jenkins-jnlp-2
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: jenkins-jnlp-2
+  template:
+    metadata:
+      name: jenkins-jnlp-2
+      labels:
+        app: jenkins-jnlp-2
+    spec:
+      terminationGracePeriodSeconds: 10
+      serviceAccount: jenkins
+      containers:
+      - name: jenkins-jnlp
+        image: '192.168.20.19:4000/bochtec-jenkins-jnlp:latest'
+        imagePullPolicy: IfNotPresent
+        env:
+          - name: JENKINS_SECRET
+            value: '436afa2b59547f494c2bc39f6c92dc4467c936fce5daad32a48186ad088f6f58'
+          - name: JENKINS_TUNNEL
+            value: '192.168.19.29:31001'
+          - name: "JENKINS_AGENT_NAME"
+            value: "jenkins-jnlp-2"
+          - name: "JENKINS_NAME"
+            value: "jenkins-jnlp-2"
+          - name: JENKINS_URL
+            value: 'http://192.168.19.29:31000/'
+        volumeMounts:
+        - name: workspace-volume
+          subPath: jenkins
+          mountPath: /var/jenkins
+        - name: jenkins-token-q2lnw
+          readOnly: true
+          mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+        - name: docker
+          readOnly: true
+          mountPath: /usr/bin/docker
+        - name: docker-sock
+          readOnly: true
+          mountPath: /var/run/docker.sock
+      securityContext:
+        fsGroup: 1000
+      volumes:
+      - name: workspace-volume
+        persistentVolumeClaim:
+          claimName: jenkins-pvc
+      - name: jenkins-token-q2lnw
+        secret:
+          secretName: jenkins-token-q2lnw
+          defaultMode: 420
+      - name: docker
+        hostPath:
+          path: /usr/bin/docker
+      - name: docker-sock
+        hostPath:
+          path: /var/run/docker.sock
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jenkins-jnlp-3
+  namespace: kube-ops
+  labels:
+    app: jenkins-jnlp-3
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: jenkins-jnlp-3
+  template:
+    metadata:
+      name: jenkins-jnlp-3
+      labels:
+        app: jenkins-jnlp-3
+    spec:
+      terminationGracePeriodSeconds: 10
+      serviceAccount: jenkins
+      containers:
+      - name: jenkins-jnlp
+        image: '192.168.20.19:4000/bochtec-jenkins-jnlp:latest'
+        imagePullPolicy: IfNotPresent
+        env:
+          - name: JENKINS_SECRET
+            value: '528e768351f34dcf94e29e420e2a1c82674c2da657497c3d9cc743d226dd5b0a'
+          - name: JENKINS_TUNNEL
+            value: '192.168.19.29:31001'
+          - name: "JENKINS_AGENT_NAME"
+            value: "jenkins-jnlp-3"
+          - name: "JENKINS_NAME"
+            value: "jenkins-jnlp-3"
+          - name: JENKINS_URL
+            value: 'http://192.168.19.29:31000/'
+        volumeMounts:
+        - name: workspace-volume
+          subPath: jenkins
+          mountPath: /var/jenkins
+        - name: jenkins-token-q2lnw
+          readOnly: true
+          mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+        - name: docker
+          readOnly: true
+          mountPath: /usr/bin/docker
+        - name: docker-sock
+          readOnly: true
+          mountPath: /var/run/docker.sock
+      securityContext:
+        fsGroup: 1000
+      volumes:
+      - name: workspace-volume
+        persistentVolumeClaim:
+          claimName: jenkins-pvc
+      - name: jenkins-token-q2lnw
+        secret:
+          secretName: jenkins-token-q2lnw
+          defaultMode: 420
+      - name: docker
+        hostPath:
+          path: /usr/bin/docker
+      - name: docker-sock
+        hostPath:
+          path: /var/run/docker.sock
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jenkins-jnlp-4
+  namespace: kube-ops
+  labels:
+    app: jenkins-jnlp-4
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: jenkins-jnlp-4
+  template:
+    metadata:
+      name: jenkins-jnlp-4
+      labels:
+        app: jenkins-jnlp-4
+    spec:
+      terminationGracePeriodSeconds: 10
+      serviceAccount: jenkins
+      containers:
+      - name: jenkins-jnlp
+        image: '192.168.20.19:4000/bochtec-jenkins-jnlp:latest'
+        imagePullPolicy: IfNotPresent
+        env:
+          - name: JENKINS_SECRET
+            value: 'e41fac54ad6401f2d6449dc973e3890f98cdc299ea9e5b1b5477125fac63c514'
+          - name: JENKINS_TUNNEL
+            value: '192.168.19.29:31001'
+          - name: "JENKINS_AGENT_NAME"
+            value: "jenkins-jnlp-4"
+          - name: "JENKINS_NAME"
+            value: "jenkins-jnlp-4"
+          - name: JENKINS_URL
+            value: 'http://192.168.19.29:31000/'
+        volumeMounts:
+        - name: workspace-volume
+          subPath: jenkins
+          mountPath: /var/jenkins
+        - name: jenkins-token-q2lnw
+          readOnly: true
+          mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+        - name: docker
+          readOnly: true
+          mountPath: /usr/bin/docker
+        - name: docker-sock
+          readOnly: true
+          mountPath: /var/run/docker.sock
+      securityContext:
+        fsGroup: 1000
+      volumes:
+      - name: workspace-volume
+        persistentVolumeClaim:
+          claimName: jenkins-pvc
+      - name: jenkins-token-q2lnw
+        secret:
+          secretName: jenkins-token-q2lnw
+          defaultMode: 420
+      - name: docker
+        hostPath:
+          path: /usr/bin/docker
+      - name: docker-sock
+        hostPath:
+          path: /var/run/docker.sock

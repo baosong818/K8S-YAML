@@ -1,0 +1,51 @@
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: sonarqube-pvc
+  namespace: kube-ops
+  labels:
+    app: sonarqube
+  annotations:
+    volume.beta.kubernetes.io/storage-provisioner: bochtec.com/nfs
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 50Gi
+  storageClassName: nfsc
+
+#---
+#kind: PersistentVolume
+#apiVersion: v1
+#metadata:
+#  name: sonarqube-pv
+#  namespace: kube-ops
+#  labels:
+#    name: sonarqube-hostpath
+#spec:
+#  accessModes:
+#    - ReadWriteOnce
+#  capacity:
+#    storage: 10Gi
+#  persistentVolumeReclaimPolicy: Retain
+#  storageClassName: sonarqube
+#  hostPath:
+#    path: /share/kube-ops/sonarqube
+#
+#---
+#kind: PersistentVolumeClaim
+#apiVersion: v1
+#metadata:
+#  name: sonarqube-pvc
+#  namespace: kube-ops
+#spec:
+#  accessModes:
+#    - ReadWriteOnce
+#  resources:
+#    requests:
+#      storage: 10Gi
+#  storageClassName: sonarqube
+#  selector:
+#    matchLabels:
+#      name: sonarqube-hostpath

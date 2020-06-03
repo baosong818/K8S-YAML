@@ -1,21 +1,24 @@
-apiVersion: apps/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: postgres-gerrit
   namespace: kube-ops
   labels:
-    name: postgres-gerrit
+    app: postgres-gerrit
 spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres-gerrit
   template:
     metadata:
-      name: postgres-gerrit
       labels:
-        name: postgres-gerrit
+        app: postgres-gerrit
     spec:
       containers:
       - name: postgres-gerrit
         image: postgres:11.7
-        imagePullPolicy: "IfNotPresent"
+        imagePullPolicy: IfNotPresent
         ports:
         - name: postgres-gerrit
           containerPort: 5432
@@ -26,13 +29,6 @@ spec:
           value: "gerrit"
         - name: POSTGRES_PASSWORD
           value: "gerrit123"
-        resources:
-          limits:
-            cpu: 1000m
-            memory: 2048Mi
-          requests:
-            cpu: 500m
-            memory: 1024Mi
         volumeMounts:
           - mountPath: /var/lib/postgresql/data
             name: postgredb-gerrit
@@ -48,11 +44,11 @@ metadata:
   name: postgres-gerrit
   namespace: kube-ops
   labels:
-    name: postgres-gerrit
+    app: postgres-gerrit
 spec:
   ports:
     - name: postgres-gerrit
       port: 5432
       targetPort: postgres-gerrit
   selector:
-    name: postgres-gerrit
+    app: postgres-gerrit

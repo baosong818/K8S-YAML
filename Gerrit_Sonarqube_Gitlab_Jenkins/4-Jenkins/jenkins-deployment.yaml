@@ -1,19 +1,27 @@
----
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: jenkins
   namespace: kube-ops
+  labels:
+    app: jenkins
 spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: jenkins
   template:
     metadata:
+      name: jenkins
       labels:
-        name: jenkins
+        app: jenkins
     spec:
-      hostAliases:
-      - ip: 192.168.21.184
-        hostnames:
-        - gerrit.bochtec.com
+#      hostAliases:
+#      - ip: 192.168.19.31
+#        hostnames:
+#        - gerrit.bochtec.com
+#        - sonarqube.bochtec.com
+#        - jenkins.bochtec.com
       terminationGracePeriodSeconds: 10
       serviceAccount: jenkins
       initContainers:
@@ -24,7 +32,7 @@ spec:
         - /bin/sh
         - -c
         - |
-          chown 1000:1000 -R /var/jenkins_home
+          chown 1000 /var/jenkins_home
         securityContext:
           privileged: true
         volumeMounts:
@@ -42,13 +50,6 @@ spec:
         - containerPort: 50000
           name: agent
           protocol: TCP
-        resources:
-          limits:
-            cpu: 1000m
-            memory: 1Gi
-          requests:
-            cpu: 500m
-            memory: 512Mi
         livenessProbe:
           httpGet:
             path: /login
@@ -68,13 +69,8 @@ spec:
           subPath: jenkins
           mountPath: /var/jenkins_home
         env:
-        - name: LIMITS_MEMORY
-          valueFrom:
-            resourceFieldRef:
-              resource: limits.memory
-              divisor: 1Mi
         - name: JAVA_OPTS
-          value: -Xmx$(LIMITS_MEMORY)m -XshowSettings:vm -Dhudson.slaves.NodeProvisioner.initialDelay=0 -Dhudson.slaves.NodeProvisioner.MARGIN=50 -Dhudson.slaves.NodeProvisioner.MARGIN0=0.85 -Duser.timezone=Asia/Shanghai
+          value: -Xms512m -Xmx2048m -Difile.encoding=utf-8 -Dorg.jenkinsci.plugins.durabletask.BourneShellScript.HEARTBEAT_CHECK_INTERVAL=86400 -Duser.timezone=Asia/Shanghai
       securityContext:
         fsGroup: 1000
       volumes:
@@ -89,32 +85,38 @@ metadata:
   name: jenkins
   namespace: kube-ops
   labels:
-    name: jenkins
+    app: jenkins
 spec:
   ports:
     - name: http
       port: 8080
       protocol: TCP
       targetPort: 8080
+      nodePort: 31000
     - name: agent
       port: 50000
-      targetPort: agent
+      protocol: TCP
+      targetPort: 50000
+      nodePort: 31001
   selector:
-    name: jenkins
-  type: ClusterIP
+    app: jenkins
+  type: NodePort
+#  type: ClusterIP
 
----
-apiVersion: extensions/v1beta1
-kind: Ingress
-metadata:
-  name: jenkins-ingress
-  namespace: kube-ops
-spec:
-  rules:
-  - host: jenkins.bochtec.com
-    http:
-      paths:
-      - path: /
-        backend:
-          serviceName: jenkins
-          servicePort: 8080
+#---
+#apiVersion: extensions/v1beta1
+#kind: Ingress
+#metadata:
+#  name: jenkins-ingress
+#  namespace: kube-ops
+#  labels:
+#    app: jenkins
+#spec:
+#  rules:
+#  - host: jenkins.bochtec.com
+#    http:
+#      paths:
+#      - path: /
+#        backend:
+#          serviceName: jenkins
+#          servicePort: 8080

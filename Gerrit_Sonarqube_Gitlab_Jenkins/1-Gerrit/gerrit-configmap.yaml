@@ -1,0 +1,52 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: gerrit-config
+  namespace: kube-ops
+  labels:
+    app: gerrit-nginx
+data:
+  gerrit.conf: |
+    server {
+      listen 80;
+      server_name gerrit.bochtec.com;
+      location / {
+        auth_basic "Gerrit Code Review";
+        auth_basic_user_file /etc/nginx/password;
+        proxy_pass http://gerrit:8080;
+        proxy_set_header X-Forwarded-For $remote_addr;
+        proxy_set_header Host $host;
+      }
+    }
+  password: |
+    gerrit:$apr1$VjmZBWsU$dVeCxFaTpX7QU.rquRzTq/
+    daibing:$apr1$YoWF8wa/$CiCbLadtrr7C9Ouo4/hLx1
+    chenguokai:$apr1$UtRJClUX$qJSoztQ/3Hq/TtGX3JlVG/
+    lizhenjiang:$apr1$Tc0IUSu2$jWN3113qrRXE.8G.CCazt.
+    liujianfeng:$apr1$WznjlHpT$9Dz7wJDgq/msKwR4Zyn530
+    dinghonghe:$apr1$d5h3rjzq$.ejOV3SYto9P4oMQ2jrtI1
+    yuliansheng:$apr1$6WurCeRr$xS04GhsOS6JfQSP..AV230
+    guyinfei:$apr1$zZC4H8os$ZL8NtsZcBlSU9TTW9Jlm4.
+    sunru:$apr1$4eiZ9zVX$/pLCxWdjmaJbLoSQMjLnf/
+    zhuyunhao:$apr1$2jtrM4ry$Yamn3qEDMcBsKPJa4Bj0v/
+    tianjin5:$apr1$wiq37yrk$3H/KJl99qJGHez21hMEhg0
+    zhangyuhang:$apr1$5Q7i4mwH$SpGLqFIzJyU2QlcTMrhau.
+  httpd-gerrit.conf: |
+    <VirtualHost *:80> 
+      ServerName localhost
+      ProxyRequests Off
+      ProxyVia Off
+      ProxyPreserveHost On
+      AllowEncodedSlashes On
+      <Proxy *:8080>
+        Order deny,allow
+        Allow from all
+      </Proxy>
+      <Location /login/>
+        AuthType Basic
+        AuthName "Gerrit Code Review"
+        Require valid-user
+        AuthUserFile /usr/local/apache2/conf/password
+      </Location>
+      ProxyPass / http://gerrit:8080/ nocanon
+    </VirtualHost>

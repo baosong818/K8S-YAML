@@ -1,16 +1,20 @@
-apiVersion: apps/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: gitlab
   namespace: kube-ops
   labels:
-    name: gitlab
+    app: gitlab
 spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: gitlab
   template:
     metadata:
       name: gitlab
       labels:
-        name: gitlab
+        app: gitlab
     spec:
       initContainers:
       - name: init
@@ -34,8 +38,8 @@ spec:
           name: gitlab
       containers:
       - name: gitlab
-        image: gitlab/gitlab-ce:12.9.0-ce.0
-        #image: gitlab/gitlab-ce:12.1.17-ce.0
+        #image: gitlab/gitlab-ce:12.9.0-ce.0
+        image: gitlab/gitlab-ce:11.10.4-ce.0
         imagePullPolicy: IfNotPresent
         securityContext:
           privileged: true
@@ -50,10 +54,10 @@ spec:
           value: long-and-random-alpha-numeric-string
         - name: GITLAB_SECRETS_OTP_KEY_BASE
           value: long-and-random-alpha-numeric-string
+        - name: GITLAB_OMNIBUS_CONFIG
+          value: "external_url 'http://gitlab'"
         - name: GITLAB_ROOT_PASSWORD
           value: passw0rd
-        - name: GITLAB_HOST
-          value: gitlab.bochtec.com
         - name: GITLAB_PORT
           value: "80"
         - name: GITLAB_SSH_PORT
@@ -113,30 +117,37 @@ metadata:
   name: gitlab
   namespace: kube-ops
   labels:
-    name: gitlab
+    app: gitlab
 spec:
   ports:
     - name: http
       port: 80
-      targetPort: http
+      targetPort: 80
+      protocol: TCP
+      nodePort: 31002
     - name: ssh
       port: 22
-      targetPort: ssh
+      targetPort: 22
+      protocol: TCP
+      nodePort: 31003
   selector:
-    name: gitlab
+    app: gitlab
+  type: NodePort
 
----
-apiVersion: extensions/v1beta1
-kind: Ingress
-metadata:
-  name: gitlab-ingress
-  namespace: kube-ops
-spec:
-  rules:
-  - host: gitlab.bochtec.com
-    http:
-      paths:
-      - path: /
-        backend:
-          serviceName: gitlab
-          servicePort: 80
+#---
+#apiVersion: extensions/v1beta1
+#kind: Ingress
+#metadata:
+#  name: gitlab-ingress
+#  namespace: kube-ops
+#  labels:
+#    app: gitlab
+#spec:
+#  rules:
+#  - host: gitlab.bochtec.com
+#    http:
+#      paths:
+#      - path: /
+#        backend:
+#          serviceName: gitlab
+#          servicePort: 80

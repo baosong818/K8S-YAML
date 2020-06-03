@@ -1,15 +1,19 @@
-apiVersion: apps/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: sonarqube
   namespace: kube-ops
   labels:
-    name: sonarqube
+    app: sonarqube
 spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: sonarqube
   template:
     metadata:
       labels:
-        name: sonarqube
+        app: sonarqube
     spec:
       initContainers:
       - name: init
@@ -59,13 +63,6 @@ spec:
           initialDelaySeconds: 60
           periodSeconds: 30
           failureThreshold: 6
-        resources:
-          limits:
-            cpu: 2000m
-            memory: 2048Mi
-          requests:
-            cpu: 1000m
-            memory: 1024Mi
         volumeMounts:
         - mountPath: /opt/sonarqube/data
           name: sonarqube
@@ -85,29 +82,33 @@ metadata:
   name: sonarqube
   namespace: kube-ops
   labels:
-    name: sonarqube
+    app: sonarqube
 spec:
   ports:
     - name: http
       port: 9000
       targetPort: 9000
       protocol: TCP
+      nodePort: 31004
   selector:
-    name: sonarqube
-  type: ClusterIP
+    app: sonarqube
+#  type: ClusterIP
+  type: NodePort
 
----
-apiVersion: extensions/v1beta1
-kind: Ingress
-metadata:
-  name: sonarqube-ingress
-  namespace: kube-ops
-spec:
-  rules:
-  - host: sonarqube.bochtec.com
-    http:
-      paths:
-      - path: /
-        backend:
-          serviceName: sonarqube
-          servicePort: 9000
+#---
+#apiVersion: extensions/v1beta1
+#kind: Ingress
+#metadata:
+#  name: sonarqube-ingress
+#  namespace: kube-ops
+#  labels:
+#    app: sonarqube
+#spec:
+#  rules:
+#  - host: sonarqube.bochtec.com
+#    http:
+#      paths:
+#      - path: /
+#        backend:
+#          serviceName: sonarqube
+#          servicePort: 9000

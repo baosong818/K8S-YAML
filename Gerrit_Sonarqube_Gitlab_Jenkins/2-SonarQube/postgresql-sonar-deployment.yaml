@@ -1,16 +1,20 @@
-apiVersion: apps/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: postgres-sonar
   namespace: kube-ops
   labels:
-    name: postgres-sonar
+    app: postgres-sonar
 spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres-sonar
   template:
     metadata:
       name: postgres-sonar
       labels:
-        name: postgres-sonar
+        app: postgres-sonar
     spec:
       containers:
       - name: postgres-sonar
@@ -26,13 +30,6 @@ spec:
           value: "sonar"
         - name: POSTGRES_PASSWORD
           value: "sonar123"
-        resources:
-          limits:
-            cpu: 1000m
-            memory: 2048Mi
-          requests:
-            cpu: 500m
-            memory: 1024Mi
         volumeMounts:
           - mountPath: /var/lib/postgresql/data
             name: postgredb-sonar
@@ -48,11 +45,11 @@ metadata:
   name: postgres-sonar
   namespace: kube-ops
   labels:
-    name: postgres-sonar
+    app: postgres-sonar
 spec:
   ports:
     - name: postgres-sonar
       port: 5432
       targetPort: postgres-sonar
   selector:
-    name: postgres-sonar
+    app: postgres-sonar

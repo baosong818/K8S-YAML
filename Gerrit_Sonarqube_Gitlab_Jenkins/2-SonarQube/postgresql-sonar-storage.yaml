@@ -1,0 +1,51 @@
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: postgres-sonar-pvc
+  namespace: kube-ops
+  labels:
+    app: postgres-sonar
+  annotations:
+    volume.beta.kubernetes.io/storage-provisioner: bochtec.com/nfs
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+  storageClassName: nfsc
+
+#---
+#kind: PersistentVolume
+#apiVersion: v1
+#metadata:
+#  name: postgres-sonar-pv
+#  namespace: kube-ops
+#  labels:
+#    name: postgres-sonar-hostpath
+#spec:
+#  accessModes:
+#    - ReadWriteOnce
+#  capacity:
+#    storage: 10Gi
+#  persistentVolumeReclaimPolicy: Retain
+#  storageClassName: postgres-sonar
+#  hostPath:
+#    path: /share/kube-ops/postgres-sonar
+#
+#---
+#kind: PersistentVolumeClaim
+#apiVersion: v1
+#metadata:
+#  name: postgres-sonar-pvc
+#  namespace: kube-ops
+#spec:
+#  accessModes:
+#    - ReadWriteOnce
+#  resources:
+#    requests:
+#      storage: 10Gi
+#  storageClassName: postgres-sonar
+#  selector:
+#    matchLabels:
+#      name: postgres-sonar-hostpath

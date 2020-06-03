@@ -1,0 +1,66 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mysql-gerrit
+  namespace: kube-ops
+  labels:
+    app: mysql-gerrit
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mysql-gerrit
+  template:
+    metadata:
+      labels:
+        app: mysql-gerrit
+    spec:
+      containers:
+      - name: mysql-gerrit
+        image: mysql:5.7.29
+        imagePullPolicy: IfNotPresent
+        ports:
+        - name: mysql-gerrit
+          containerPort: 3306
+        env:
+        - name: MYSQL_DATABASE
+          value: "reviewdb"
+        - name: MYSQL_USER
+          value: "gerrit"
+        - name: MYSQL_PASSWORD
+          value: "gerrit123"
+        - name: MYSQL_ROOT_PASSWORD
+          value: "passw0rd"
+        volumeMounts:
+          - mountPath: /var/lib/mysql
+            name: mysql-gerrit
+          - mountPath: /etc/mysql/conf.d/my.cnf
+            name: mysqlconfig
+            subPath: my.cnf
+      volumes:
+        - name: mysql-gerrit
+          persistentVolumeClaim:
+            claimName: mysql-gerrit-pvc
+        - name: mysqlconfig
+          configMap:
+            name:  mysql-gerrit-config
+            items:
+              - key: my.cnf
+                path: my.cnf
+
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mysql-gerrit
+  namespace: kube-ops
+  labels:
+    app: mysql-gerrit
+spec:
+  ports:
+    - name: mysql-gerrit
+      port: 3306
+      targetPort: mysql-gerrit
+  selector:
+    app: mysql-gerrit
